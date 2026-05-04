@@ -44,6 +44,71 @@ Kimenetek:
 - `docs/generated/schema.graphql`
 - `docs/generated/openapi.yaml`
 
+## Docker telepítés
+
+A repo tartalmaz egy production Dockerfile-t és egy `docker-compose.yml`-t. A konténer induláskor lefuttatja a Prisma migrációkat, majd elindítja a NestJS appot:
+
+```bash
+npx prisma migrate deploy && node dist/main.js
+```
+
+Előkészítés:
+
+```bash
+cp .env.example .env
+```
+
+Éles/proxyzott telepítésnél a `.env` értékeit állítsd be a tényleges környezetre:
+
+```env
+DATABASE_URL="postgresql://user:password@postgres-host:5432/eletut"
+SESSION_SECRET="long-random-secret"
+SESSION_STORE="postgres"
+APP_URL="https://eletut-api.donamo.science"
+FRONTEND_URL="https://eletut.donamo.science"
+GOOGLE_CALLBACK_URL="https://eletut-api.donamo.science/auth/callback/google"
+GOOGLE_CLIENT_ID="..."
+GOOGLE_CLIENT_SECRET="..."
+```
+
+A compose az `nginx-proxy` external Docker networköt használja. Ha még nincs ilyen network:
+
+```bash
+docker network create nginx-proxy
+```
+
+Indítás builddel:
+
+```bash
+docker compose up -d --build
+```
+
+Logok:
+
+```bash
+docker compose logs -f backend
+```
+
+Leállítás:
+
+```bash
+docker compose down
+```
+
+A proxy hostok alapértelmezett értékei a `docker-compose.yml`-ben:
+
+```env
+VIRTUAL_HOST=eletut-api.donamo.science
+LETSENCRYPT_HOST=eletut-api.donamo.science
+VIRTUAL_PORT=3000
+```
+
+Más domainhez indítás előtt környezeti változóval felülírhatók:
+
+```bash
+VIRTUAL_HOST=api.example.com LETSENCRYPT_HOST=api.example.com docker compose up -d --build
+```
+
 Logolás:
 
 ```env
