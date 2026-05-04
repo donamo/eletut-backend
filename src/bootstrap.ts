@@ -13,6 +13,16 @@ type ClosableSessionStore = session.Store & {
 export function configureApp(app: INestApplication) {
   const config = app.get(ConfigService);
   const logger = new Logger('HttpSession');
+  const nodeEnv = config.get<string>('NODE_ENV');
+  const trustProxyConfig =
+    config.get<string>('TRUST_PROXY') ?? (nodeEnv === 'production' ? '1' : '');
+  if (trustProxyConfig) {
+    const trustProxy = Number.isNaN(Number(trustProxyConfig))
+      ? trustProxyConfig
+      : Number(trustProxyConfig);
+    app.getHttpAdapter().getInstance().set('trust proxy', trustProxy);
+    logger.log(`Trust proxy enabled: ${trustProxyConfig}.`);
+  }
   const sessionStore = config.get<string>('SESSION_STORE') ?? 'postgres';
   const sessionTtlSeconds = Number.parseInt(
     config.get<string>('SESSION_TTL_SECONDS') ?? '1209600',
@@ -50,7 +60,7 @@ export function configureApp(app: INestApplication) {
       cookie: {
         httpOnly: true,
         sameSite: 'lax',
-        secure: config.get<string>('NODE_ENV') === 'production',
+        secure: nodeEnv === 'production',
         maxAge: sessionTtlSeconds * 1000,
       },
     }),

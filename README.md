@@ -64,6 +64,7 @@ cp .env.example .env
 DATABASE_URL="postgresql://user:password@postgres-host:5432/eletut"
 SESSION_SECRET="long-random-secret"
 SESSION_STORE="postgres"
+TRUST_PROXY="1"
 APP_URL="https://eletut-api.donamo.science"
 FRONTEND_URL="https://eletut.donamo.science"
 GOOGLE_CALLBACK_URL="https://eletut-api.donamo.science/auth/callback/google"
@@ -125,6 +126,14 @@ SESSION_TTL_SECONDS="1209600"
 ```
 
 Alapértelmezésben a session Postgresben tárolódik a `session` táblában, így több backend node ugyanazt a sessiont tudja használni.
+
+Reverse proxy mögötti production telepítésnél hagyd bekapcsolva:
+
+```env
+TRUST_PROXY="1"
+```
+
+Ez kell ahhoz, hogy az app felismerje az `X-Forwarded-Proto: https` fejlécet, és a productionben `Secure` session cookie ténylegesen kimenjen a Google callback válaszon.
 
 Ha a `dev.home:5432` címre Prisma `P1001` hibát ad, használd közvetlenül az IP-t:
 

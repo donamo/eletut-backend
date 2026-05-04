@@ -9,6 +9,7 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3000
+      - TRUST_PROXY=${TRUST_PROXY:-1}
       - VIRTUAL_HOST=${VIRTUAL_HOST:-eletut-api.donamo.science}
       - LETSENCRYPT_HOST=${LETSENCRYPT_HOST:-eletut-api.donamo.science}
       - VIRTUAL_PORT=3000
