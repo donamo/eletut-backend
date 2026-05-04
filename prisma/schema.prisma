@@ -1,0 +1,121 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum DatePrecision {
+  YEAR
+  MONTH
+  DAY
+}
+
+enum LifeEventColor {
+  RED
+  BLUE
+  GREEN
+  YELLOW
+  ORANGE
+  PURPLE
+  PINK
+  BROWN
+  BLACK
+  WHITE
+  GRAY
+  CYAN
+  MAGENTA
+  LIME
+  INDIGO
+  TEAL
+}
+
+enum EgoStateCategory {
+  GYERMEKI
+  SZULOI
+  FELNOTT
+}
+
+model User {
+  id            String      @id @default(cuid())
+  googleSubject String      @unique
+  email         String
+  displayName   String?
+  events        LifeEvent[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([email])
+}
+
+model LifeEvent {
+  id            String        @id @default(cuid())
+  ownerUserId   String
+  owner         User          @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+  title         String
+  description   String?
+  location      String?
+  importance    Int           @default(3)
+  color         LifeEventColor?
+  dateValue     DateTime
+  datePrecision DatePrecision
+  gyermekiStates LifeEventGyermekiState[]
+  szuloiStates    LifeEventSzuloiState[]
+  felnottStates   LifeEventFelnottState[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([ownerUserId, dateValue, createdAt])
+}
+
+model EgoState {
+  id            String        @id
+  category      EgoStateCategory
+  name          String
+  essence       String
+  innerSentence String
+  sortOrder     Int
+  gyermekiLinks LifeEventGyermekiState[]
+  szuloiLinks   LifeEventSzuloiState[]
+  felnottLinks  LifeEventFelnottState[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@unique([category, name])
+  @@index([category, sortOrder])
+}
+
+model LifeEventGyermekiState {
+  lifeEventId String
+  egoStateId  String
+  lifeEvent   LifeEvent @relation(fields: [lifeEventId], references: [id], onDelete: Cascade)
+  egoState    EgoState  @relation(fields: [egoStateId], references: [id], onDelete: Restrict)
+  createdAt   DateTime  @default(now())
+
+  @@id([lifeEventId, egoStateId])
+  @@index([egoStateId])
+}
+
+model LifeEventSzuloiState {
+  lifeEventId String
+  egoStateId  String
+  lifeEvent   LifeEvent @relation(fields: [lifeEventId], references: [id], onDelete: Cascade)
+  egoState    EgoState  @relation(fields: [egoStateId], references: [id], onDelete: Restrict)
+  createdAt   DateTime  @default(now())
+
+  @@id([lifeEventId, egoStateId])
+  @@index([egoStateId])
+}
+
+model LifeEventFelnottState {
+  lifeEventId String
+  egoStateId  String
+  lifeEvent   LifeEvent @relation(fields: [lifeEventId], references: [id], onDelete: Cascade)
+  egoState    EgoState  @relation(fields: [egoStateId], references: [id], onDelete: Restrict)
+  createdAt   DateTime  @default(now())
+
+  @@id([lifeEventId, egoStateId])
+  @@index([egoStateId])
+}

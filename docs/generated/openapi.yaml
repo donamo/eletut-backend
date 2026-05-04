@@ -1,0 +1,48 @@
+openapi: 3.0.0
+paths:
+  /auth/login/google:
+    get:
+      operationId: AuthController_loginWithGoogle
+      parameters: []
+      responses:
+        "200":
+          description: ""
+      tags: &a1
+        - Auth
+  /auth/callback/google:
+    get:
+      operationId: AuthController_googleCallback
+      parameters: []
+      responses:
+        "200":
+          description: ""
+      tags: *a1
+  /auth/logout:
+    post:
+      operationId: AuthController_logout
+      parameters: []
+      responses:
+        "201":
+          description: ""
+      tags: *a1
+  /me:
+    get:
+      operationId: AuthController_me
+      parameters: []
+      responses:
+        "200":
+          description: ""
+      tags: *a1
+info:
+  title: Eletut Backend API
+  description: REST API for the Eletvonal MVP backend.
+  version: 0.1.0
+  contact: {}
+tags: []
+servers: []
+components:
+  securitySchemes:
+    connect.sid:
+      type: apiKey
+      in: cookie
+      name: connect.sid

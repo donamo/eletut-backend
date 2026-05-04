@@ -1,0 +1,9 @@
+node_modules
+dist
+.git
+.serena
+.env
+docs
+test
+*.tsbuildinfo
+npm-debug.log

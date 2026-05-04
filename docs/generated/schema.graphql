@@ -1,0 +1,129 @@
+input CreateLifeEventInput {
+  color: LifeEventColor
+  datePrecision: DatePrecision!
+  dateValue: DateTime!
+  description: String
+  felnottStateIds: [String!]
+  gyermekiStateIds: [String!]
+  importance: Int!
+  location: String
+  szuloiStateIds: [String!]
+  title: String!
+}
+
+enum DatePrecision {
+  DAY
+  MONTH
+  YEAR
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type EgoState {
+  category: EgoStateCategory!
+  essence: String!
+  id: String!
+  innerSentence: String!
+  name: String!
+  sortOrder: Int!
+}
+
+type EgoStateCatalog {
+  felnott: [EgoState!]!
+  gyermeki: [EgoState!]!
+  szuloi: [EgoState!]!
+}
+
+enum EgoStateCategory {
+  FELNOTT
+  GYERMEKI
+  SZULOI
+}
+
+type LifeEvent {
+  color: LifeEventColor
+  createdAt: DateTime!
+  datePrecision: DatePrecision!
+  dateValue: DateTime!
+  description: String
+  felnottStates: [EgoState!]!
+  gyermekiStates: [EgoState!]!
+  id: ID!
+  importance: Int!
+  location: String
+  ownerUserId: ID!
+  szuloiStates: [EgoState!]!
+  title: String!
+  updatedAt: DateTime!
+}
+
+enum LifeEventColor {
+  BLACK
+  BLUE
+  BROWN
+  CYAN
+  GRAY
+  GREEN
+  INDIGO
+  LIME
+  MAGENTA
+  ORANGE
+  PINK
+  PURPLE
+  RED
+  TEAL
+  WHITE
+  YELLOW
+}
+
+type LifeEventLocationSummary {
+  count: Int!
+  location: String!
+}
+
+type Mutation {
+  createLifeEvent(input: CreateLifeEventInput!): LifeEvent!
+  deleteLifeEvent(id: String!): LifeEvent!
+  updateLifeEvent(input: UpdateLifeEventInput!): LifeEvent!
+  updateLifeEventImportanceAndColor(input: UpdateLifeEventImportanceAndColorInput!): LifeEvent!
+}
+
+type Query {
+  egoStates: EgoStateCatalog!
+  lifeEvent(id: String!): LifeEvent!
+  lifeEvents: [LifeEvent!]!
+  me: User!
+  topLifeEventLocations: [LifeEventLocationSummary!]!
+}
+
+input UpdateLifeEventImportanceAndColorInput {
+  color: LifeEventColor
+  id: ID!
+  importance: Int
+}
+
+input UpdateLifeEventInput {
+  color: LifeEventColor
+  datePrecision: DatePrecision
+  dateValue: DateTime
+  description: String
+  felnottStateIds: [String!]
+  gyermekiStateIds: [String!]
+  id: ID!
+  importance: Int
+  location: String
+  szuloiStateIds: [String!]
+  title: String
+}
+
+type User {
+  createdAt: DateTime!
+  displayName: String
+  email: String!
+  googleSubject: String!
+  id: ID!
+  updatedAt: DateTime!
+}
