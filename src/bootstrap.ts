@@ -5,6 +5,7 @@ import session from 'express-session';
 import passport from 'passport';
 import connectPgSimple from 'connect-pg-simple';
 import { isDebugLoggingEnabled } from './common/logging';
+import { createRateLimitMiddleware } from './common/rate-limit.middleware';
 
 type ClosableSessionStore = session.Store & {
   close?: () => void;
@@ -51,6 +52,7 @@ export function configureApp(app: INestApplication) {
 
   logger.log(`Using ${sessionStore} session store.`);
 
+  app.use(createRateLimitMiddleware(config));
   app.use(
     session({
       store,

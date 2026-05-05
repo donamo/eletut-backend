@@ -118,6 +118,17 @@ LOG_LEVEL="debug"
 
 Támogatott szintek: `silent`, `error`, `warn`, `log`/`info`, `debug`/`dev`, `verbose`.
 
+Rate limit:
+
+```env
+RATE_LIMIT_ENABLED="true"
+RATE_LIMIT_WINDOW_MS="60000"
+RATE_LIMIT_MAX="300"
+RATE_LIMIT_AUTH_MAX="30"
+```
+
+Az app memóriában limitál IP alapján. A globális limit alapból 300 kérés/perc/IP, az `/auth/*` útvonalakon 30 kérés/perc/IP. Ez egy backend védelmi réteg, de publikus szerveren érdemes mellé nginx szintű rate limitet, `ufw` tűzfalat és SSH-ra `fail2ban`-t is használni.
+
 Session store:
 
 ```env
