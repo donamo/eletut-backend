@@ -5,11 +5,18 @@ import session from 'express-session';
 import passport from 'passport';
 import connectPgSimple from 'connect-pg-simple';
 import { isDebugLoggingEnabled } from './common/logging';
+import { ProductionNotFoundFilter } from './common/production-not-found.filter';
 import { createRateLimitMiddleware } from './common/rate-limit.middleware';
 
 type ClosableSessionStore = session.Store & {
   close?: () => void;
 };
+
+const getRequestIp = (request: Request) =>
+  request.ip ||
+  request.headers['x-forwarded-for']?.toString().split(',')[0]?.trim() ||
+  request.socket.remoteAddress ||
+  'unknown';
 
 export function configureApp(app: INestApplication) {
   const config = app.get(ConfigService);
@@ -81,7 +88,7 @@ export function configureApp(app: INestApplication) {
       const user = request.user as { id?: string } | undefined;
       const userId = user?.id ?? 'anonymous';
       const sessionId = request.sessionID ?? 'none';
-      const message = `${request.method} ${request.originalUrl} ${response.statusCode} ${Date.now() - startedAt}ms session=${sessionId} cookie=${hasCookie ? 'yes' : 'no'} setCookie=${hasSetCookie ? 'yes' : 'no'} user=${userId}`;
+      const message = `${request.method} ${request.originalUrl} ${response.statusCode} ${Date.now() - startedAt}ms ip=${getRequestIp(request)} env=${nodeEnv ?? 'development'} session=${sessionId} cookie=${hasCookie ? 'yes' : 'no'} setCookie=${hasSetCookie ? 'yes' : 'no'} user=${userId}`;
 
       if (response.statusCode >= 500) {
         logger.error(message);
@@ -112,4 +119,7 @@ export function configureApp(app: INestApplication) {
       forbidNonWhitelisted: true,
     }),
   );
+  if (nodeEnv === 'production') {
+    app.useGlobalFilters(new ProductionNotFoundFilter());
+  }
 }
