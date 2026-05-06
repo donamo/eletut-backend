@@ -7,6 +7,8 @@ import {
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 
+const NOT_FOUND_RESPONSE_DELAY_MS = 5_000;
+
 const getRequestIp = (request: Request) =>
   request.ip ||
   request.headers['x-forwarded-for']?.toString().split(',')[0]?.trim() ||
@@ -29,8 +31,11 @@ export class ProductionNotFoundFilter
     const response = context.getResponse<Response>();
 
     this.logger.warn(
-      `Production 404 response body suppressed ip=${getRequestIp(request)} method=${request.method} url=${request.originalUrl}`,
+      `Production 404 response body suppressed and delayed ${NOT_FOUND_RESPONSE_DELAY_MS}ms ip=${getRequestIp(request)} method=${request.method} url=${request.originalUrl}`,
     );
-    response.status(404).end();
+    globalThis.setTimeout(() => {
+      if (response.headersSent) return;
+      response.status(404).end();
+    }, NOT_FOUND_RESPONSE_DELAY_MS);
   }
 }
