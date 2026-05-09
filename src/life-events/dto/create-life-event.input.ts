@@ -70,6 +70,15 @@ export class CreateLifeEventInput {
   @IsString({ each: true })
   felnottStateIds?: string[] | null;
 
+  @ApiPropertyOptional({ type: [String], example: ['family', 'school'] })
+  @Field(() => [String], { nullable: true })
+  @IsOptional()
+  @IsArray()
+  @ArrayUnique()
+  @IsString({ each: true })
+  @MaxLength(80, { each: true })
+  labelNames?: string[] | null;
+
   @ApiProperty({ minimum: 1, maximum: 5, example: 3 })
   @Field(() => Int)
   @IsInt()

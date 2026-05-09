@@ -70,6 +70,219 @@ describe('Life events e2e', () => {
     });
   });
 
+  it('auto-creates user labels by name and allows renaming and recoloring them', async () => {
+    const created = await request(testApp.app.getHttpServer())
+      .post('/graphql')
+      .set(authHeader)
+      .send({
+        query: `
+          mutation CreateLifeEvent($input: CreateLifeEventInput!) {
+            createLifeEvent(input: $input) {
+              id
+              labels {
+                name
+                color
+              }
+            }
+          }
+        `,
+        variables: {
+          input: {
+            title: 'Labelled event',
+            importance: 3,
+            labelNames: ['family', 'school'],
+            dateValue: '2020-05-01T00:00:00.000Z',
+            datePrecision: 'MONTH',
+          },
+        },
+      })
+      .expect(200);
+
+    expect(created.body.errors).toBeUndefined();
+    expect(created.body.data.createLifeEvent.labels).toEqual([
+      { name: 'family', color: 'GRAY' },
+      { name: 'school', color: 'GRAY' },
+    ]);
+
+    const eventId = created.body.data.createLifeEvent.id;
+
+    const labels = await request(testApp.app.getHttpServer())
+      .post('/graphql')
+      .set(authHeader)
+      .send({
+        query: `
+          query {
+            labels {
+              name
+              color
+            }
+          }
+        `,
+      })
+      .expect(200);
+
+    expect(labels.body.errors).toBeUndefined();
+    expect(labels.body.data.labels).toEqual([
+      { name: 'family', color: 'GRAY' },
+      { name: 'school', color: 'GRAY' },
+    ]);
+
+    const renamed = await request(testApp.app.getHttpServer())
+      .post('/graphql')
+      .set(authHeader)
+      .send({
+        query: `
+          mutation UpdateLabel($input: UpdateLabelInput!) {
+            updateLabel(input: $input) {
+              name
+              color
+            }
+          }
+        `,
+        variables: {
+          input: {
+            name: 'family',
+            newName: 'childhood',
+            color: 'TEAL',
+          },
+        },
+      })
+      .expect(200);
+
+    expect(renamed.body.errors).toBeUndefined();
+    expect(renamed.body.data.updateLabel).toEqual({
+      name: 'childhood',
+      color: 'TEAL',
+    });
+
+    const event = await request(testApp.app.getHttpServer())
+      .post('/graphql')
+      .set(authHeader)
+      .send({
+        query: `
+          query LifeEvent($id: String!) {
+            lifeEvent(id: $id) {
+              labels {
+                name
+                color
+              }
+            }
+          }
+        `,
+        variables: { id: eventId },
+      })
+      .expect(200);
+
+    expect(event.body.errors).toBeUndefined();
+    expect(event.body.data.lifeEvent.labels).toEqual([
+      { name: 'childhood', color: 'TEAL' },
+      { name: 'school', color: 'GRAY' },
+    ]);
+
+    const cleared = await request(testApp.app.getHttpServer())
+      .post('/graphql')
+      .set(authHeader)
+      .send({
+        query: `
+          mutation UpdateLifeEvent($input: UpdateLifeEventInput!) {
+            updateLifeEvent(input: $input) {
+              id
+              labels {
+                name
+              }
+            }
+          }
+        `,
+        variables: {
+          input: {
+            id: eventId,
+            labelNames: null,
+          },
+        },
+      })
+      .expect(200);
+
+    expect(cleared.body.errors).toBeUndefined();
+    expect(cleared.body.data.updateLifeEvent.labels).toEqual([]);
+  });
+
+  it('uses label names as case-insensitive keys', async () => {
+    const first = await request(testApp.app.getHttpServer())
+      .post('/graphql')
+      .set(authHeader)
+      .send({
+        query: `
+          mutation CreateLifeEvent($input: CreateLifeEventInput!) {
+            createLifeEvent(input: $input) {
+              labels {
+                name
+                color
+              }
+            }
+          }
+        `,
+        variables: {
+          input: {
+            title: 'First label event',
+            importance: 3,
+            labelNames: ['Family'],
+            dateValue: '2020-05-01T00:00:00.000Z',
+            datePrecision: 'MONTH',
+          },
+        },
+      })
+      .expect(200);
+    expect(first.body.errors).toBeUndefined();
+    expect(first.body.data.createLifeEvent.labels).toEqual([
+      { name: 'family', color: 'GRAY' },
+    ]);
+
+    await request(testApp.app.getHttpServer())
+      .post('/graphql')
+      .set(authHeader)
+      .send({
+        query: `
+          mutation CreateLifeEvent($input: CreateLifeEventInput!) {
+            createLifeEvent(input: $input) {
+              labels {
+                name
+              }
+            }
+          }
+        `,
+        variables: {
+          input: {
+            title: 'Second label event',
+            importance: 3,
+            labelNames: [' family ', 'FAMILY'],
+            dateValue: '2021-05-01T00:00:00.000Z',
+            datePrecision: 'MONTH',
+          },
+        },
+      })
+      .expect(200);
+
+    const labels = await request(testApp.app.getHttpServer())
+      .post('/graphql')
+      .set(authHeader)
+      .send({
+        query: `
+          query {
+            labels {
+              name
+              color
+            }
+          }
+        `,
+      })
+      .expect(200);
+
+    expect(labels.body.errors).toBeUndefined();
+    expect(labels.body.data.labels).toEqual([
+      { name: 'family', color: 'GRAY' },
+    ]);
+  });
+
   it('creates, lists, updates and deletes a minimal life event through GraphQL', async () => {
     const created = await request(testApp.app.getHttpServer())
       .post('/graphql')

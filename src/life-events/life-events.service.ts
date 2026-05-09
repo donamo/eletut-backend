@@ -11,10 +11,21 @@ const normalizeOptionalText = (value: string | null | undefined) =>
 const uniqueIds = (ids: string[] | null | undefined) =>
   Array.from(new Set(ids ?? []));
 
+const normalizeLabelNames = (names: string[] | null | undefined) =>
+  Array.from(
+    new Set(
+      (names ?? [])
+        .map((name) => name.trim())
+        .map((name) => name.toLocaleLowerCase('hu-HU'))
+        .filter((name) => name.length > 0),
+    ),
+  );
+
 const lifeEventInclude = {
   gyermekiStates: { include: { egoState: true } },
   szuloiStates: { include: { egoState: true } },
   felnottStates: { include: { egoState: true } },
+  labels: { include: { label: true } },
 } satisfies Prisma.LifeEventInclude;
 
 @Injectable()
@@ -69,21 +80,30 @@ export class LifeEventsService {
   async create(ownerUserId: string, input: CreateLifeEventInput) {
     await this.validateEgoStateSelections(input);
 
-    return this.prisma.lifeEvent.create({
-      data: {
+    return this.prisma.$transaction(async (tx) => {
+      const labels = await this.ensureLabels(
+        tx,
         ownerUserId,
-        title: input.title.trim(),
-        description: normalizeOptionalText(input.description),
-        location: normalizeOptionalText(input.location),
-        importance: input.importance,
-        color: input.color ?? null,
-        dateValue: input.dateValue,
-        datePrecision: input.datePrecision,
-        gyermekiStates: this.buildNestedStateLinks(input.gyermekiStateIds),
-        szuloiStates: this.buildNestedStateLinks(input.szuloiStateIds),
-        felnottStates: this.buildNestedStateLinks(input.felnottStateIds),
-      },
-      include: lifeEventInclude,
+        input.labelNames,
+      );
+
+      return tx.lifeEvent.create({
+        data: {
+          ownerUserId,
+          title: input.title.trim(),
+          description: normalizeOptionalText(input.description),
+          location: normalizeOptionalText(input.location),
+          importance: input.importance,
+          color: input.color ?? null,
+          dateValue: input.dateValue,
+          datePrecision: input.datePrecision,
+          gyermekiStates: this.buildNestedStateLinks(input.gyermekiStateIds),
+          szuloiStates: this.buildNestedStateLinks(input.szuloiStateIds),
+          felnottStates: this.buildNestedStateLinks(input.felnottStateIds),
+          labels: this.buildNestedLabelLinks(labels),
+        },
+        include: lifeEventInclude,
+      });
     });
   }
 
@@ -130,6 +150,12 @@ export class LifeEventsService {
         input.id,
         input.felnottStateIds,
       );
+      await this.replaceLabelLinks(
+        tx,
+        ownerUserId,
+        input.id,
+        input.labelNames,
+      );
 
       return tx.lifeEvent.findUniqueOrThrow({
         where: { id: input.id },
@@ -169,6 +195,31 @@ export class LifeEventsService {
   private buildNestedStateLinks(ids: string[] | null | undefined) {
     const data = uniqueIds(ids).map((egoStateId) => ({ egoStateId }));
     return data.length > 0 ? { createMany: { data } } : undefined;
+  }
+
+  private buildNestedLabelLinks(labels: Array<{ id: string }>) {
+    const data = labels.map((label) => ({ labelId: label.id }));
+    return data.length > 0 ? { createMany: { data } } : undefined;
+  }
+
+  private async ensureLabels(
+    tx: Prisma.TransactionClient,
+    ownerUserId: string,
+    names: string[] | null | undefined,
+  ) {
+    const labelNames = normalizeLabelNames(names);
+    if (labelNames.length === 0) return [];
+
+    return Promise.all(
+      labelNames.map((name) =>
+        tx.label.upsert({
+          where: { ownerUserId_name: { ownerUserId, name } },
+          create: { ownerUserId, name, color: 'GRAY' },
+          update: {},
+          select: { id: true, name: true },
+        }),
+      ),
+    );
   }
 
   private async validateEgoStateSelections(input: {
@@ -241,6 +292,26 @@ export class LifeEventsService {
       if (data.length > 0) {
         await tx.lifeEventFelnottState.createMany({ data });
       }
+    }
+  }
+
+  private async replaceLabelLinks(
+    tx: Prisma.TransactionClient,
+    ownerUserId: string,
+    lifeEventId: string,
+    names: string[] | null | undefined,
+  ) {
+    if (names === undefined) return;
+
+    const labels = await this.ensureLabels(tx, ownerUserId, names);
+    await tx.lifeEventLabel.deleteMany({ where: { lifeEventId } });
+
+    const data = labels.map((label) => ({
+      lifeEventId,
+      labelId: label.id,
+    }));
+    if (data.length > 0) {
+      await tx.lifeEventLabel.createMany({ data });
     }
   }
 }

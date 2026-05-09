@@ -1,6 +1,7 @@
 import { Field, ID, Int, ObjectType } from '@nestjs/graphql';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { EgoState } from '../../ego-states/models/ego-state.model';
+import { Label } from '../../labels/models/label.model';
 import { DatePrecision } from './date-precision.enum';
 import { LifeEventColor } from './life-event-color.enum';
 
@@ -42,6 +43,9 @@ export class LifeEvent {
 
   @Field(() => [EgoState])
   felnottStates: EgoState[];
+
+  @Field(() => [Label])
+  labels: Label[];
 
   @ApiProperty({ minimum: 1, maximum: 5, example: 3 })
   @Field(() => Int)

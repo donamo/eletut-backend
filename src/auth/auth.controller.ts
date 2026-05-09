@@ -12,13 +12,17 @@ import { Request, Response } from 'express';
 import { AuthenticatedGuard } from '../common/authenticated.guard';
 import { CurrentUser } from '../common/current-user.decorator';
 import { User } from '../users/models/user.model';
+import { UsersService } from '../users/users.service';
 import { GoogleCallbackGuard, GoogleLoginGuard } from './google-auth.guard';
 
 @Controller()
 export class AuthController {
   private readonly logger = new Logger(AuthController.name);
 
-  constructor(private readonly config: ConfigService) {}
+  constructor(
+    private readonly config: ConfigService,
+    private readonly usersService: UsersService,
+  ) {}
 
   @Get('auth/login/google')
   @UseGuards(GoogleLoginGuard)
@@ -69,6 +73,6 @@ export class AuthController {
   @UseGuards(AuthenticatedGuard)
   me(@CurrentUser() user: User) {
     this.logger.debug(`Returning current user id=${user.id}`);
-    return user;
+    return this.usersService.withAdminFlag(user);
   }
 }

@@ -10,6 +10,7 @@ import { UseGuards } from '@nestjs/common';
 import { AuthenticatedGuard } from '../common/authenticated.guard';
 import { CurrentUser } from '../common/current-user.decorator';
 import { EgoState } from '../ego-states/models/ego-state.model';
+import { Label } from '../labels/models/label.model';
 import { User } from '../users/models/user.model';
 import { CreateLifeEventInput } from './dto/create-life-event.input';
 import { UpdateLifeEventImportanceAndColorInput } from './dto/update-life-event-importance-and-color.input';
@@ -19,13 +20,15 @@ import { LifeEvent } from './models/life-event.model';
 import { LifeEventsService } from './life-events.service';
 
 type EgoStateLink = { egoState: EgoState };
+type LabelLink = { label: Label };
 type LifeEventWithEgoStateLinks = Omit<
   LifeEvent,
-  'gyermekiStates' | 'szuloiStates' | 'felnottStates'
+  'gyermekiStates' | 'szuloiStates' | 'felnottStates' | 'labels'
 > & {
   gyermekiStates?: EgoStateLink[];
   szuloiStates?: EgoStateLink[];
   felnottStates?: EgoStateLink[];
+  labels?: LabelLink[];
 };
 
 @Resolver(() => LifeEvent)
@@ -46,6 +49,11 @@ export class LifeEventsResolver {
   @ResolveField(() => [EgoState])
   felnottStates(@Parent() event: LifeEventWithEgoStateLinks) {
     return this.extractSortedEgoStates(event.felnottStates);
+  }
+
+  @ResolveField(() => [Label])
+  labels(@Parent() event: LifeEventWithEgoStateLinks) {
+    return this.extractSortedLabels(event.labels);
   }
 
   @Query(() => [LifeEvent])
@@ -96,5 +104,11 @@ export class LifeEventsResolver {
     return (links ?? [])
       .map((link) => link.egoState)
       .sort((left, right) => left.sortOrder - right.sortOrder);
+  }
+
+  private extractSortedLabels(links?: LabelLink[]) {
+    return (links ?? [])
+      .map((link) => link.label)
+      .sort((left, right) => left.name.localeCompare(right.name));
   }
 }

@@ -70,6 +70,7 @@ FRONTEND_URL="https://eletut.donamo.science"
 GOOGLE_CALLBACK_URL="https://eletut-api.donamo.science/auth/callback/google"
 GOOGLE_CLIENT_ID="..."
 GOOGLE_CLIENT_SECRET="..."
+ADMIN_EMAIL="admin@example.com"
 ```
 
 A compose az `nginx-proxy` external Docker networköt használja. Ha még nincs ilyen network:
@@ -145,6 +146,19 @@ TRUST_PROXY="1"
 ```
 
 Ez kell ahhoz, hogy az app felismerje az `X-Forwarded-Proto: https` fejlécet, és a productionben `Secure` session cookie ténylegesen kimenjen a Google callback válaszon.
+
+User whitelist:
+
+```env
+ADMIN_EMAIL="admin@example.com"
+```
+
+Google login után a user rekord automatikusan létrejön, de alapból `isEnabled=false`. Az `ADMIN_EMAIL` című felhasználó mindig beléphet, és GraphQL-en tudja listázni, engedélyezni vagy tiltani a usereket.
+
+Admin GraphQL:
+
+- `users`
+- `updateUserEnabled(input)`
 
 Ha a `dev.home:5432` címre Prisma `P1001` hibát ad, használd közvetlenül az IP-t:
 

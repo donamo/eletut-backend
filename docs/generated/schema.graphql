@@ -6,6 +6,7 @@ input CreateLifeEventInput {
   felnottStateIds: [String!]
   gyermekiStateIds: [String!]
   importance: Int!
+  labelNames: [String!]
   location: String
   szuloiStateIds: [String!]
   title: String!
@@ -43,6 +44,15 @@ enum EgoStateCategory {
   SZULOI
 }
 
+type Label {
+  color: LifeEventColor!
+  createdAt: DateTime!
+  id: ID!
+  name: String!
+  ownerUserId: ID!
+  updatedAt: DateTime!
+}
+
 type LifeEvent {
   color: LifeEventColor
   createdAt: DateTime!
@@ -53,6 +63,7 @@ type LifeEvent {
   gyermekiStates: [EgoState!]!
   id: ID!
   importance: Int!
+  labels: [Label!]!
   location: String
   ownerUserId: ID!
   szuloiStates: [EgoState!]!
@@ -87,16 +98,26 @@ type LifeEventLocationSummary {
 type Mutation {
   createLifeEvent(input: CreateLifeEventInput!): LifeEvent!
   deleteLifeEvent(id: String!): LifeEvent!
+  updateLabel(input: UpdateLabelInput!): Label!
   updateLifeEvent(input: UpdateLifeEventInput!): LifeEvent!
   updateLifeEventImportanceAndColor(input: UpdateLifeEventImportanceAndColorInput!): LifeEvent!
+  updateUserEnabled(input: UpdateUserEnabledInput!): User!
 }
 
 type Query {
   egoStates: EgoStateCatalog!
+  labels: [Label!]!
   lifeEvent(id: String!): LifeEvent!
   lifeEvents: [LifeEvent!]!
   me: User!
   topLifeEventLocations: [LifeEventLocationSummary!]!
+  users: [User!]!
+}
+
+input UpdateLabelInput {
+  color: LifeEventColor
+  name: String!
+  newName: String
 }
 
 input UpdateLifeEventImportanceAndColorInput {
@@ -114,9 +135,15 @@ input UpdateLifeEventInput {
   gyermekiStateIds: [String!]
   id: ID!
   importance: Int
+  labelNames: [String!]
   location: String
   szuloiStateIds: [String!]
   title: String
+}
+
+input UpdateUserEnabledInput {
+  id: ID!
+  isEnabled: Boolean!
 }
 
 type User {
@@ -125,5 +152,7 @@ type User {
   email: String!
   googleSubject: String!
   id: ID!
+  isAdmin: Boolean!
+  isEnabled: Boolean!
   updatedAt: DateTime!
 }

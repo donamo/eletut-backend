@@ -15,6 +15,12 @@ export class User {
   displayName?: string | null;
 
   @Field()
+  isEnabled: boolean;
+
+  @Field()
+  isAdmin: boolean;
+
+  @Field()
   createdAt: Date;
 
   @Field()

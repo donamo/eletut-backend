@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { ForbiddenException, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { Profile, Strategy, VerifyCallback } from 'passport-google-oauth20';
@@ -41,6 +41,13 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       email,
       displayName: profile.displayName,
     });
+
+    if (!user.isEnabled && !this.usersService.isAdminEmail(user.email)) {
+      this.logger.warn(
+        `Google profile validated but user is disabled googleSubject=${profile.id} user=${user.id} email=${user.email}`,
+      );
+      return done(new ForbiddenException('User is not enabled.'));
+    }
 
     this.logger.debug(
       `Google profile validated googleSubject=${profile.id} user=${user.id} emailPresent=yes displayNamePresent=${profile.displayName ? 'yes' : 'no'}`,

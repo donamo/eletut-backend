@@ -5,6 +5,7 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { Request, Response } from 'express';
 import { AuthModule } from './auth/auth.module';
 import { EgoStatesModule } from './ego-states/ego-states.module';
+import { LabelsModule } from './labels/labels.module';
 import { LifeEventsModule } from './life-events/life-events.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { UsersModule } from './users/users.module';
@@ -26,6 +27,7 @@ import { UsersModule } from './users/users.module';
     UsersModule,
     AuthModule,
     EgoStatesModule,
+    LabelsModule,
     LifeEventsModule,
   ],
 })

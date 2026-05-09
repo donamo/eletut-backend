@@ -43,7 +43,9 @@ model User {
   googleSubject String      @unique
   email         String
   displayName   String?
+  isEnabled     Boolean     @default(false)
   events        LifeEvent[]
+  labels        Label[]
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 
@@ -64,10 +66,36 @@ model LifeEvent {
   gyermekiStates LifeEventGyermekiState[]
   szuloiStates    LifeEventSzuloiState[]
   felnottStates   LifeEventFelnottState[]
+  labels        LifeEventLabel[]
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
   @@index([ownerUserId, dateValue, createdAt])
+}
+
+model Label {
+  id          String           @id @default(cuid())
+  ownerUserId String
+  owner       User             @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+  name        String
+  color       LifeEventColor   @default(GRAY)
+  events      LifeEventLabel[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@unique([ownerUserId, name])
+  @@index([ownerUserId, name])
+}
+
+model LifeEventLabel {
+  lifeEventId String
+  labelId     String
+  lifeEvent   LifeEvent @relation(fields: [lifeEventId], references: [id], onDelete: Cascade)
+  label       Label     @relation(fields: [labelId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+
+  @@id([lifeEventId, labelId])
+  @@index([labelId])
 }
 
 model EgoState {

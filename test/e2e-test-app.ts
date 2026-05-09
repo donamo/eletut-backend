@@ -10,7 +10,9 @@ import { User } from '../src/users/models/user.model';
 
 export const TEST_USER_ID = 'e2e-user-a';
 export const OTHER_USER_ID = 'e2e-user-b';
+export const ADMIN_USER_ID = 'e2e-admin';
 export const authHeader = { 'x-test-user-id': TEST_USER_ID };
+export const adminAuthHeader = { 'x-test-user-id': ADMIN_USER_ID };
 
 let migrated = false;
 
@@ -124,12 +126,21 @@ export const resetE2eDatabase = async (prisma: PrismaService) => {
         googleSubject: 'google-subject-a',
         email: 'a@example.com',
         displayName: 'User A',
+        isEnabled: true,
       },
       {
         id: OTHER_USER_ID,
         googleSubject: 'google-subject-b',
         email: 'b@example.com',
         displayName: 'User B',
+        isEnabled: true,
+      },
+      {
+        id: ADMIN_USER_ID,
+        googleSubject: 'google-subject-admin',
+        email: process.env.ADMIN_EMAIL ?? 'admin@example.com',
+        displayName: 'Admin User',
+        isEnabled: false,
       },
     ],
   });
