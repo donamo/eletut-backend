@@ -7,8 +7,6 @@ import {
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 
-const NOT_FOUND_RESPONSE_DELAY_MS = 5_000;
-
 const getRequestIp = (request: Request) =>
   request.ip ||
   request.headers['x-forwarded-for']?.toString().split(',')[0]?.trim() ||
@@ -21,6 +19,8 @@ export class ProductionNotFoundFilter
 {
   private readonly logger = new Logger(ProductionNotFoundFilter.name);
 
+  constructor(private readonly responseDelayMs = 0) {}
+
   catch(exception: NotFoundException, host: ArgumentsHost) {
     if (host.getType() !== 'http') {
       throw exception;
@@ -31,11 +31,21 @@ export class ProductionNotFoundFilter
     const response = context.getResponse<Response>();
 
     this.logger.warn(
-      `Production 404 response body suppressed and delayed ${NOT_FOUND_RESPONSE_DELAY_MS}ms ip=${getRequestIp(request)} method=${request.method} url=${request.originalUrl}`,
+      `Production 404 response body suppressed${
+        this.responseDelayMs > 0 ? ` and delayed ${this.responseDelayMs}ms` : ''
+      } ip=${getRequestIp(request)} method=${request.method} url=${request.originalUrl}`,
     );
-    globalThis.setTimeout(() => {
+
+    const sendResponse = () => {
       if (response.headersSent) return;
       response.status(404).end();
-    }, NOT_FOUND_RESPONSE_DELAY_MS);
+    };
+
+    if (this.responseDelayMs <= 0) {
+      sendResponse();
+      return;
+    }
+
+    globalThis.setTimeout(sendResponse, this.responseDelayMs);
   }
 }

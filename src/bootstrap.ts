@@ -18,6 +18,16 @@ const getRequestIp = (request: Request) =>
   request.socket.remoteAddress ||
   'unknown';
 
+export const getNotFoundDelayMs = (config: ConfigService) => {
+  const rawDelay = config.get<string>('NOT_FOUND_DELAY_MS');
+  if (!rawDelay) return 0;
+
+  const delayMs = Number.parseInt(rawDelay, 10);
+  if (!Number.isFinite(delayMs) || delayMs <= 0) return 0;
+
+  return delayMs;
+};
+
 export function configureApp(app: INestApplication) {
   const config = app.get(ConfigService);
   const logger = new Logger('HttpSession');
@@ -120,6 +130,8 @@ export function configureApp(app: INestApplication) {
     }),
   );
   if (nodeEnv === 'production') {
-    app.useGlobalFilters(new ProductionNotFoundFilter());
+    app.useGlobalFilters(
+      new ProductionNotFoundFilter(getNotFoundDelayMs(config)),
+    );
   }
 }
