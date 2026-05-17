@@ -4,6 +4,7 @@ import { ConfigModule } from '@nestjs/config';
 import { GraphQLModule } from '@nestjs/graphql';
 import { Request, Response } from 'express';
 import { AuthModule } from './auth/auth.module';
+import { HealthModule } from './health/health.module';
 import { EgoStatesModule } from './ego-states/ego-states.module';
 import { LabelsModule } from './labels/labels.module';
 import { LifeEventsModule } from './life-events/life-events.module';
@@ -24,6 +25,7 @@ import { UsersModule } from './users/users.module';
       }),
     }),
     PrismaModule,
+    HealthModule,
     UsersModule,
     AuthModule,
     EgoStatesModule,
