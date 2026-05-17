@@ -2,6 +2,8 @@ process.env.NODE_ENV = 'test';
 process.env.DATABASE_URL =
   process.env.E2E_DATABASE_URL ??
   'postgresql://postgres:postgres@192.168.1.2:5432/eletut_e2e';
+process.env.READONLY_DATABASE_URL =
+  process.env.E2E_READONLY_DATABASE_URL ?? process.env.DATABASE_URL;
 process.env.SESSION_SECRET = process.env.SESSION_SECRET ?? 'e2e-secret';
 process.env.RATE_LIMIT_ENABLED = process.env.RATE_LIMIT_ENABLED ?? 'false';
 process.env.FRONTEND_URL = process.env.FRONTEND_URL ?? 'http://localhost:5173';

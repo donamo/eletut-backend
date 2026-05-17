@@ -62,6 +62,7 @@ cp .env.example .env
 
 ```env
 DATABASE_URL="postgresql://user:password@postgres-host:5432/eletut"
+READONLY_DATABASE_URL="postgresql://user:password@postgres-replica-host:5432/eletut"
 SESSION_SECRET="long-random-secret"
 SESSION_STORE="postgres"
 TRUST_PROXY="1"

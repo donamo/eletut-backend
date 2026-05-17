@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { ReadonlyPrismaService } from '../prisma/readonly-prisma.service';
 import { UpdateLabelInput } from './dto/update-label.input';
 
 const normalizeLabelName = (name: string) =>
@@ -8,10 +9,13 @@ const normalizeLabelName = (name: string) =>
 
 @Injectable()
 export class LabelsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly readonlyPrisma: ReadonlyPrismaService,
+  ) {}
 
   list(ownerUserId: string) {
-    return this.prisma.label.findMany({
+    return this.readonlyPrisma.label.findMany({
       where: { ownerUserId },
       orderBy: [{ name: 'asc' }],
     });

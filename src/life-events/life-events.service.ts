@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { EgoStateCategory, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
+import { ReadonlyPrismaService } from '../prisma/readonly-prisma.service';
 import { CreateLifeEventInput } from './dto/create-life-event.input';
 import { UpdateLifeEventImportanceAndColorInput } from './dto/update-life-event-importance-and-color.input';
 import { UpdateLifeEventInput } from './dto/update-life-event.input';
@@ -30,10 +31,13 @@ const lifeEventInclude = {
 
 @Injectable()
 export class LifeEventsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly readonlyPrisma: ReadonlyPrismaService,
+  ) {}
 
   list(ownerUserId: string) {
-    return this.prisma.lifeEvent.findMany({
+    return this.readonlyPrisma.lifeEvent.findMany({
       where: { ownerUserId },
       include: lifeEventInclude,
       orderBy: [{ dateValue: 'desc' }, { createdAt: 'desc' }],
@@ -41,7 +45,7 @@ export class LifeEventsService {
   }
 
   async topLocations(ownerUserId: string) {
-    const rows = await this.prisma.lifeEvent.groupBy({
+    const rows = await this.readonlyPrisma.lifeEvent.groupBy({
       by: ['location'],
       where: {
         ownerUserId,

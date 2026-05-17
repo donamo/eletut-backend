@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { EgoStateCategory } from '@prisma/client';
-import { PrismaService } from '../prisma/prisma.service';
+import { ReadonlyPrismaService } from '../prisma/readonly-prisma.service';
 
 @Injectable()
 export class EgoStatesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: ReadonlyPrismaService) {}
 
   async catalog() {
     const [gyermeki, szuloi, felnott] = await Promise.all([
