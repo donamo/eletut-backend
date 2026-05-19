@@ -6,5 +6,7 @@ coverage
 *.db
 *.db-journal
 *.tsbuildinfo
+docker-compose-stack.yml
 elettortenet_mvp_specifikacio.md
 enallapotok-export-codex.json
+CLAUDE.md
